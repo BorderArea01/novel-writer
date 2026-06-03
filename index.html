@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>📖 长篇小说写作助手 v3.99.4</title>
+<title>📖 长篇小说写作助手 v3.99.5</title>
 <style>
 /* ==================== CSS 变量 & 重置 ==================== */
 :root {
@@ -328,6 +328,7 @@ select{cursor:pointer;appearance:auto}
 .auto-toggle input:checked+.toggle-track::after{left:16px}
 .auto-toggle .toggle-label{margin-left:2px}
 .auto-toggle.active .toggle-label{color:var(--accent);font-weight:600}
+.auto-toggle .toggle-label.follow-off{color:var(--text2);font-weight:400}
 
 /* ==================== 拆分按钮下拉 ==================== */
 .split-btn-group{display:inline-flex;position:relative}
@@ -784,6 +785,11 @@ select{cursor:pointer;appearance:auto}
           <input type="checkbox" id="contextToggle">
           <span class="toggle-track"></span>
           <span class="toggle-label" id="contextLabel" style="font-size:.72rem">📋 摘要</span>
+        </label>
+        <label class="auto-toggle active" id="editorFollowLabel" title="正文生成时是否自动滚动到最新内容。手动上滚会自动关闭。" style="margin:0">
+          <input type="checkbox" id="editorFollowToggle" checked>
+          <span class="toggle-track"></span>
+          <span class="toggle-label" id="editorFollowText" style="font-size:.72rem">跟随最新</span>
         </label>
         <span id="statsDisplay" style="font-size:.75rem;color:var(--text2);white-space:nowrap;display:flex;align-items:center;gap:4px" title="本章字数 / 全文字数 · 本次tokens / 累计tokens · 缓存率">
           <span id="chWordCount" class="flip-counter"></span><span style="color:var(--border)">/</span><span id="totalWordCount" class="flip-counter"></span><span>字</span>
@@ -1874,6 +1880,8 @@ let outlineProgrammaticScroll = false;
 let batchGenerating = false;
 let batchAutoScroll = true;
 let batchProgrammaticScroll = false;
+let editorAutoScroll = true;
+let editorProgrammaticScroll = false;
 
 function stopAutoGen(){
   _autoGenStopped = true;
@@ -2895,6 +2903,45 @@ function toggleBatchAutoScroll(){
   setBatchAutoScroll(!batchAutoScroll);
 }
 
+function initEditorScrollGuard(){
+  const editor = document.getElementById('chapterEditor');
+  if(!editor || editor.dataset.scrollGuardReady) return;
+  editor.dataset.scrollGuardReady = '1';
+  editor.addEventListener('scroll', () => {
+    if(editorProgrammaticScroll || !state.generating) return;
+    setEditorAutoScroll(isEditorNearBottom(editor));
+  });
+}
+
+function isEditorNearBottom(editor){
+  return editor.scrollHeight - editor.scrollTop - editor.clientHeight < 36;
+}
+
+function scrollEditorToBottom(editor){
+  if(!editor) return;
+  editorProgrammaticScroll = true;
+  editor.scrollTop = editor.scrollHeight;
+  requestAnimationFrame(() => { editorProgrammaticScroll = false; });
+}
+
+function setEditorAutoScroll(enabled){
+  editorAutoScroll = enabled;
+  const toggle = document.getElementById('editorFollowToggle');
+  const label = document.getElementById('editorFollowLabel');
+  const text = document.getElementById('editorFollowText');
+  if(toggle) toggle.checked = enabled;
+  if(label) label.classList.toggle('active', enabled);
+  if(text){
+    text.textContent = enabled ? '跟随最新' : '停止跟随';
+    text.classList.toggle('follow-off', !enabled);
+  }
+  if(enabled) scrollEditorToBottom(document.getElementById('chapterEditor'));
+}
+
+function maybeScrollEditorToBottom(editor){
+  if(editorAutoScroll) scrollEditorToBottom(editor);
+}
+
 async function generateChapter(){
   if(!state.baseURL || !state.model){
     toast('请先在设置中配置 API');
@@ -3013,6 +3060,8 @@ async function generateChapter(){
   
   const editor = document.getElementById('chapterEditor');
   editor.value = '';
+  initEditorScrollGuard();
+  setEditorAutoScroll(true);
   document.getElementById('thinkingIndicator').classList.add('show');
   
   try{
@@ -3027,7 +3076,7 @@ async function generateChapter(){
         firstChunk = false;
       }
       editor.value += chunk;
-      editor.scrollTop = editor.scrollHeight;
+      maybeScrollEditorToBottom(editor);
       updateWordCount();
       updatePlotPointUI();
     }, {onReasoning: (chunk) => {
@@ -3084,7 +3133,7 @@ async function generateChapter(){
           {role:'user', content: `${contCtx}\n---\n以下是本章已写内容（后半部分），请继续往下写，保持风格一致：\n\n${currentText.slice(-3000)}`},
         ], (chunk) => {
           editor.value += chunk;
-          editor.scrollTop = editor.scrollHeight;
+          maybeScrollEditorToBottom(editor);
           updateWordCount();
           updatePlotPointUI();
         });
@@ -3214,6 +3263,8 @@ async function continueChapter(){
   btn.textContent = '⏳ 续写中...';
   
   const editor = document.getElementById('chapterEditor');
+  initEditorScrollGuard();
+  setEditorAutoScroll(true);
   document.getElementById('thinkingIndicator').classList.add('show');
   
   try{
@@ -3240,7 +3291,7 @@ async function continueChapter(){
         firstChunk = false;
       }
       editor.value += chunk;
-      editor.scrollTop = editor.scrollHeight;
+      maybeScrollEditorToBottom(editor);
       updateWordCount();
       updatePlotPointUI();
     }, {onReasoning: (chunk) => {
@@ -3590,13 +3641,14 @@ async function continueForPlotPoints(existingText, remainingPoints){
   const pointList = remainingPoints.map((p, i) => `  ${i+1}. ${p.desc}`).join('\n');
   const markerList = remainingPoints.map((p, i) => `  【PP${p.id.match(/\d+/)?.[0] || i+1}】${p.desc}`).join('\n');
   const editor = document.getElementById('chapterEditor');
+  initEditorScrollGuard();
   
   let appendText = await apiStreamChat([
     {role:'system', content:'你是一位小说作家。请根据已有内容继续往下写，保持文风一致。下面列出还没写到的剧情关键点，每写到某个关键点的情节时，立即在对应的语句后面插入【PP\d+】标记。不要重复已有内容，直接续写正文。避免使用破折号、"不是而是"句式等AI常见痕迹。'},
     {role:'user', content: `请继续写下面的小说章节。以下剧情关键点还没写到：\n${pointList}\n\n每写到某个关键点情节时，请在对应的语句后面立即插入标记：\n${markerList}\n\n请依次写这些情节，保持文风一致，直接续写不要加说明：\n\n${existingText.slice(-600)}`},
   ], (chunk) => {
     editor.value += chunk;
-    editor.scrollTop = editor.scrollHeight;
+    maybeScrollEditorToBottom(editor);
     updateWordCount();
     updatePlotPointUI();
   });
@@ -3786,6 +3838,8 @@ async function generateEnding(){
   const prevLen = existing.replace(/\s/g,'').length;
   const editor = document.getElementById('chapterEditor');
   const fullExisting = existing;
+  initEditorScrollGuard();
+  setEditorAutoScroll(true);
   document.getElementById('thinkingIndicator').classList.add('show');
   
   try{
@@ -3800,7 +3854,7 @@ async function generateEnding(){
         firstChunk = false;
       }
       editor.value += chunk;
-      editor.scrollTop = editor.scrollHeight;
+      maybeScrollEditorToBottom(editor);
       updateWordCount();
       updatePlotPointUI();
     }, {onReasoning: (chunk) => {
@@ -4823,7 +4877,7 @@ function updateBadge(){
 }
 
 function showAbout(){
-  toast('📖 长篇小说写作助手 v3.99.4 — 配合自定义大模型 API，结构化写作，去 AI 味');
+  toast('📖 长篇小说写作助手 v3.99.5 — 配合自定义大模型 API，结构化写作，去 AI 味');
 }
 
 // ==================== 初始化 ====================
@@ -4909,6 +4963,11 @@ function init(){
     state.contextFull = this.checked;
     document.getElementById('contextLabel').textContent = this.checked ? '📜 全文' : '📋 摘要';
     saveState();
+  });
+  initEditorScrollGuard();
+  setEditorAutoScroll(true);
+  document.getElementById('editorFollowToggle')?.addEventListener('change', function(){
+    setEditorAutoScroll(this.checked);
   });
   
   if(state.currentTab === 'write'){
