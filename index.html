@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>📖 长篇小说写作助手 v3.99.6</title>
+<title>📖 长篇小说写作助手 v3.99.7</title>
 <style>
 /* ==================== CSS 变量 & 重置 ==================== */
 :root {
@@ -1887,6 +1887,7 @@ let _autoGenStopped = false;
 let outlineStreamView = 'raw';
 let outlineAutoScroll = true;
 let outlineProgrammaticScroll = false;
+let outlineGenerating = false;
 let batchGenerating = false;
 let batchAutoScroll = true;
 let batchProgrammaticScroll = false;
@@ -2033,6 +2034,7 @@ async function generateOutline(){
     .replace(/\{chapterCount\}/g, String(state.project.chapterCount));
   
   state.generating = true;
+  outlineGenerating = true;
   state.abortController = new AbortController();
   showStopButton();
   btn.disabled = true;
@@ -3919,6 +3921,7 @@ async function generateEnding(){
     if(e.name!=='AbortError') toast('写结尾失败: '+e.message);
   }finally{
     state.generating = false;
+    outlineGenerating = false;
     state.abortController = null;
     btn.disabled = false;
     btn.textContent = '🔚 写结尾';
@@ -3930,9 +3933,10 @@ async function generateEnding(){
 
 function closeOutlineStream(){
   document.getElementById('outlineStreamModal').classList.remove('show');
-  if(state.generating && state.abortController){
+  if(outlineGenerating && state.generating && state.abortController){
     state.abortController.abort();
     state.generating = false;
+    outlineGenerating = false;
     hideStopButton();
   }
 }
@@ -4911,7 +4915,7 @@ function updateBadge(){
 }
 
 function showAbout(){
-  toast('📖 长篇小说写作助手 v3.99.5 — 配合自定义大模型 API，结构化写作，去 AI 味');
+  toast('📖 长篇小说写作助手 v3.99.7 — 配合自定义大模型 API，结构化写作，去 AI 味');
 }
 
 // ==================== 初始化 ====================
