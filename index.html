@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>📖 长篇小说写作助手 v3.99.5</title>
+<title>📖 长篇小说写作助手 v3.99.6</title>
 <style>
 /* ==================== CSS 变量 & 重置 ==================== */
 :root {
@@ -329,6 +329,14 @@ select{cursor:pointer;appearance:auto}
 .auto-toggle .toggle-label{margin-left:2px}
 .auto-toggle.active .toggle-label{color:var(--accent);font-weight:600}
 .auto-toggle .toggle-label.follow-off{color:var(--text2);font-weight:400}
+.editor-follow-float{
+  display:none;position:fixed;right:20px;bottom:92px;z-index:180;
+  border:1px solid var(--accent2);background:var(--surface);color:var(--accent);
+  border-radius:999px;padding:8px 14px;font-size:.82rem;font-family:var(--font);
+  box-shadow:0 4px 18px rgba(0,0,0,.16);cursor:pointer;align-items:center;gap:6px;
+}
+.editor-follow-float.show{display:inline-flex}
+.editor-follow-float.off{border-color:var(--border);color:var(--text2);background:var(--surface2)}
 
 /* ==================== 拆分按钮下拉 ==================== */
 .split-btn-group{display:inline-flex;position:relative}
@@ -639,6 +647,7 @@ select{cursor:pointer;appearance:auto}
   .batch-preview-body,.outline-preview-summary{font-size:.84rem;line-height:1.7}
   #chapterEditor{min-height:50vh;font-size:.92rem}
   .toast{left:10px;right:10px;bottom:14px;transform:none;text-align:center;padding:9px 12px}
+  .editor-follow-float{right:12px;bottom:72px;padding:7px 12px;font-size:.78rem}
 }
 </style>
 </head>
@@ -1183,6 +1192,7 @@ select{cursor:pointer;appearance:auto}
 
 <!-- ====== Toast ====== -->
 <div class="toast" id="toast"></div>
+<button class="editor-follow-float" id="editorFollowFloat" onclick="toggleEditorAutoScroll()" title="正文生成时切换是否自动滚动到最新内容">跟随最新</button>
 
 <script>
 /* ================================================================
@@ -2564,6 +2574,7 @@ function stopGeneration(){
     state.generating = false;
   }
   batchGenerating = false;
+  hideEditorFollowFloat();
   document.getElementById('btnStopGen').style.display = 'none';
   // 恢复所有生成按钮
   document.getElementById('btnGenChapter').disabled = false;
@@ -2584,6 +2595,14 @@ function showStopButton(){
 
 function hideStopButton(){
   document.getElementById('btnStopGen').style.display = 'none';
+}
+
+function showEditorFollowFloat(){
+  document.getElementById('editorFollowFloat')?.classList.add('show');
+}
+
+function hideEditorFollowFloat(){
+  document.getElementById('editorFollowFloat')?.classList.remove('show');
 }
 
 // ==================== 全文批量生成 ====================
@@ -2929,13 +2948,22 @@ function setEditorAutoScroll(enabled){
   const toggle = document.getElementById('editorFollowToggle');
   const label = document.getElementById('editorFollowLabel');
   const text = document.getElementById('editorFollowText');
+  const floatBtn = document.getElementById('editorFollowFloat');
   if(toggle) toggle.checked = enabled;
   if(label) label.classList.toggle('active', enabled);
   if(text){
     text.textContent = enabled ? '跟随最新' : '停止跟随';
     text.classList.toggle('follow-off', !enabled);
   }
+  if(floatBtn){
+    floatBtn.classList.toggle('off', !enabled);
+    floatBtn.textContent = enabled ? '跟随最新' : '停止跟随';
+  }
   if(enabled) scrollEditorToBottom(document.getElementById('chapterEditor'));
+}
+
+function toggleEditorAutoScroll(){
+  setEditorAutoScroll(!editorAutoScroll);
 }
 
 function maybeScrollEditorToBottom(editor){
@@ -3062,6 +3090,7 @@ async function generateChapter(){
   editor.value = '';
   initEditorScrollGuard();
   setEditorAutoScroll(true);
+  showEditorFollowFloat();
   document.getElementById('thinkingIndicator').classList.add('show');
   
   try{
@@ -3235,6 +3264,7 @@ async function generateChapter(){
     state.abortController = null;
     btn.disabled = false;
     btn.textContent = '✨ 生成本章';
+    hideEditorFollowFloat();
     hideStopButton();
   }
 }
@@ -3265,6 +3295,7 @@ async function continueChapter(){
   const editor = document.getElementById('chapterEditor');
   initEditorScrollGuard();
   setEditorAutoScroll(true);
+  showEditorFollowFloat();
   document.getElementById('thinkingIndicator').classList.add('show');
   
   try{
@@ -3328,6 +3359,7 @@ async function continueChapter(){
     state.abortController = null;
     btn.disabled = false;
     btn.textContent = '✏️ 续写';
+    hideEditorFollowFloat();
     hideStopButton();
   }
 }
@@ -3840,6 +3872,7 @@ async function generateEnding(){
   const fullExisting = existing;
   initEditorScrollGuard();
   setEditorAutoScroll(true);
+  showEditorFollowFloat();
   document.getElementById('thinkingIndicator').classList.add('show');
   
   try{
@@ -3890,6 +3923,7 @@ async function generateEnding(){
     btn.disabled = false;
     btn.textContent = '🔚 写结尾';
     document.getElementById('thinkingIndicator').classList.remove('show');
+    hideEditorFollowFloat();
     hideStopButton();
   }
 }
