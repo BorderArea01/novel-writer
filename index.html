@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>📖 长篇小说写作助手 v3.99.10</title>
+<title>📖 长篇小说写作助手 v3.99.11</title>
 <style>
 /* ==================== CSS 变量 & 重置 ==================== */
 :root {
@@ -4522,7 +4522,7 @@ function exportNovel(format){
   const chapters = state.chapters
     .map(c => ({chapter: c.chapter, content: c.content ? c.content.replace(/【PP\d+】/g, '').trim() : ''}))
     .filter(c => c.content);
-  if(chapters.length===0){ toast('还没有已完成的章节'); return; }
+  if(format !== 'json' && chapters.length===0){ toast('还没有已完成的章节'); return; }
   
   let content = '';
   const title = state.project.title || '无题';
@@ -4573,9 +4573,16 @@ ${chapters.map(ch => {
         exportTime: new Date().toISOString(),
         project: state.project,
         outline: state.outline,
-        chapters: chapters,
+        chapters: state.chapters.map(c => ({
+          chapter: c.chapter,
+          content: c.content ? c.content.replace(/【PP\d+】/g, '').trim() : '',
+        })),
+        memory: state.memory,
         chatWindows: state.chatWindows,
-        version: 2,
+        selectedLength: state.selectedLength,
+        contextFull: state.contextFull,
+        autoContinue: state.autoContinue,
+        version: 3,
       };
       downloadFile(`${title}_备份.json`, JSON.stringify(backup, null, 2), 'application/json;charset=utf-8');
       toast('✅ 项目备份已下载');
@@ -4607,8 +4614,14 @@ function importProject(event){
         state.outline = data.outline || [];
         state.chapters = data.chapters || [];
         if(data.chatWindows) state.chatWindows = data.chatWindows;
+        if(data.memory) state.memory = data.memory;
+        if(data.selectedLength) state.selectedLength = data.selectedLength;
+        if(typeof data.contextFull === 'boolean') state.contextFull = data.contextFull;
+        if(typeof data.autoContinue === 'boolean') state.autoContinue = data.autoContinue;
+        saveState();
         loadProjectToUI();
         renderOutline();
+        renderMemoryViewer();
         updateBadge();
         switchTab('project');
         toast('✅ 项目已导入');
@@ -4991,7 +5004,7 @@ function updateBadge(){
 }
 
 function showAbout(){
-  toast('📖 长篇小说写作助手 v3.99.10 — 配合自定义大模型 API，结构化写作，去 AI 味');
+  toast('📖 长篇小说写作助手 v3.99.11 — 配合自定义大模型 API，结构化写作，去 AI 味');
 }
 
 // ==================== 初始化 ====================
