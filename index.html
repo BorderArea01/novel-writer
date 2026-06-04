@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>📖 长篇小说写作助手 v3.99.7</title>
+<title>📖 长篇小说写作助手 v3.99.8</title>
 <style>
 /* ==================== CSS 变量 & 重置 ==================== */
 :root {
@@ -1946,6 +1946,13 @@ async function startAutoGen(){
       document.getElementById('autoGenDetail').textContent = '第 1/2 步';
       document.getElementById('autoGenFill').style.width = '0%';
       await generateOutline();
+      document.getElementById('autoGenStatus').textContent = '📑 大纲已生成，请先确认大纲预览';
+      document.getElementById('autoGenDetail').textContent = '确认后可点击写作页「生成全文」';
+      document.getElementById('autoGenFill').style.width = '100%';
+      document.getElementById('autoGenPanel').style.display = 'none';
+      document.getElementById('autoGenOverlay').style.display = 'none';
+      toast('大纲已生成，已暂停。确认大纲后再生成正文');
+      return;
     }
     
     // === 第2步：逐章生成 ===
@@ -2126,6 +2133,7 @@ async function generateOutline(){
     }
   }finally{
     state.generating = false;
+    outlineGenerating = false;
     state.abortController = null;
     btn.disabled = false;
     btn.textContent = '✨ 生成大纲';
@@ -3921,7 +3929,6 @@ async function generateEnding(){
     if(e.name!=='AbortError') toast('写结尾失败: '+e.message);
   }finally{
     state.generating = false;
-    outlineGenerating = false;
     state.abortController = null;
     btn.disabled = false;
     btn.textContent = '🔚 写结尾';
@@ -4915,7 +4922,7 @@ function updateBadge(){
 }
 
 function showAbout(){
-  toast('📖 长篇小说写作助手 v3.99.7 — 配合自定义大模型 API，结构化写作，去 AI 味');
+  toast('📖 长篇小说写作助手 v3.99.8 — 配合自定义大模型 API，结构化写作，去 AI 味');
 }
 
 // ==================== 初始化 ====================
