@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>📖 长篇小说写作助手 v3.99.8</title>
+<title>📖 长篇小说写作助手 v3.99.9</title>
 <style>
 /* ==================== CSS 变量 & 重置 ==================== */
 :root {
@@ -17,10 +17,40 @@
   --accent2: #d4a843;
   --danger: #c0392b;
   --success: #27ae60;
+  --chat-user: linear-gradient(135deg,#c7952a,#dba841);
+  --chat-assistant: #ffffff;
+  --chat-panel: linear-gradient(180deg,#f7f4ee 0%,#f0ece4 100%);
+  --toast-bg: #333333;
+  --toast-text: #ffffff;
+  --soft-danger: #fdf0ef;
+  --soft-danger2: #fde8e8;
+  --overlay-soft: rgba(255,255,255,0.3);
   --shadow: 0 2px 12px rgba(0,0,0,.06);
   --radius: 8px;
   --font: 'Georgia','Noto Serif SC','Source Han Serif SC',serif;
   --mono: 'SFMono-Regular','Menlo','Consolas',monospace;
+}
+html[data-theme="dark"]{
+  --bg: #15130f;
+  --surface: #211d18;
+  --surface2: #2b261f;
+  --border: #40382d;
+  --text: #eee2cf;
+  --text2: #b8a890;
+  --accent: #d8a93a;
+  --accent2: #e6be62;
+  --danger: #e06b5f;
+  --success: #58c783;
+  --chat-user: linear-gradient(135deg,#9a6b16,#c4932f);
+  --chat-assistant: #252018;
+  --chat-panel: linear-gradient(180deg,#191612 0%,#211d18 100%);
+  --toast-bg: #eee2cf;
+  --toast-text: #17140f;
+  --soft-danger: rgba(224,107,95,.14);
+  --soft-danger2: rgba(224,107,95,.18);
+  --overlay-soft: rgba(0,0,0,.36);
+  --shadow: 0 2px 14px rgba(0,0,0,.32);
+  color-scheme: dark;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{font-size:15px}
@@ -138,7 +168,7 @@ select{cursor:pointer;appearance:auto}
 }
 .btn-primary:hover{background:var(--accent2);border-color:var(--accent2)}
 .btn-danger{color:var(--danger);border-color:var(--danger)}
-.btn-danger:hover{background:#fdf0ef}
+.btn-danger:hover{background:var(--soft-danger)}
 .btn-sm{padding:5px 12px;font-size:.78rem}
 .btn-icon{padding:6px 10px;font-size:.9rem}
 .btn-ghost{border-color:transparent;background:transparent}
@@ -466,7 +496,7 @@ select{cursor:pointer;appearance:auto}
   height:44vh;min-height:240px;overflow-y:auto;
   border:1px solid var(--border);border-radius:10px;
   padding:16px;margin:8px 0 10px;
-  background:linear-gradient(180deg,#f7f4ee 0%,#f0ece4 100%);
+  background:var(--chat-panel);
   display:flex;flex-direction:column;gap:10px;
 }
 .chat-msg{
@@ -477,13 +507,13 @@ select{cursor:pointer;appearance:auto}
 @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 @keyframes textReveal{0%{color:transparent;text-shadow:0 0 6px rgba(0,0,0,.05)}100%{color:inherit;text-shadow:none}}
 .chat-msg.user{
-  background:linear-gradient(135deg,#c7952a,#dba841);
+  background:var(--chat-user);
   color:#fff;align-self:flex-end;
   border-bottom-right-radius:4px;
   margin-left:auto;box-shadow:0 2px 6px rgba(184,134,11,.25);
 }
 .chat-msg.assistant{
-  background:#fff;color:var(--text);
+  background:var(--chat-assistant);color:var(--text);
   align-self:flex-start;border-bottom-left-radius:4px;
   border:1px solid #e8e4de;
   box-shadow:0 1px 4px rgba(0,0,0,.06);
@@ -508,7 +538,7 @@ select{cursor:pointer;appearance:auto}
   background:var(--accent2);color:#fff;
 }
 .default-dot:hover{opacity:.8}
-.chat-msg .msg-time{font-size:.6rem;color:#bbb;margin-top:5px;text-align:right}
+.chat-msg .msg-time{font-size:.6rem;color:var(--text2);margin-top:5px;text-align:right}
 .chat-msg.user .msg-time{color:rgba(255,255,255,.6)}
 .chat-input-area{
   display:flex;align-items:flex-end;gap:8px;
@@ -523,7 +553,7 @@ select{cursor:pointer;appearance:auto}
   border-bottom-color:var(--border);
 }
 .chat-tab-btn:hover{background:var(--surface2)}
-.chat-tab-btn.active{background:#fff;color:var(--text);border-color:var(--border) var(--border) #fff;border-bottom-color:#fff;font-weight:600;position:relative;top:1px;z-index:2}
+.chat-tab-btn.active{background:var(--surface);color:var(--text);border-color:var(--border) var(--border) var(--surface);border-bottom-color:var(--surface);font-weight:600;position:relative;top:1px;z-index:2}
 .chat-tab-btn:not(.active){background:var(--surface2);color:var(--text2)}
 .chat-tab-btn:not(.active):hover{background:var(--border)}
 .chat-tab-title{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;flex:1;text-align:left}
@@ -540,7 +570,7 @@ select{cursor:pointer;appearance:auto}
 .chat-msg.user .msg-actions{bottom:-22px;right:0}
 .action-btn{background:var(--surface);border:1px solid var(--border);border-radius:3px;cursor:pointer;font-size:.65rem;padding:1px 6px;line-height:1.5;transition:.1s}
 .action-btn:hover{background:var(--surface2)}
-.action-btn.delete-btn:hover{background:#fde8e8;border-color:#e74c3c;color:#e74c3c}
+.action-btn.delete-btn:hover{background:var(--soft-danger2);border-color:var(--danger);color:var(--danger)}
 .chat-stream-cursor{
   display:inline-block;width:2px;height:1em;
   background:var(--accent);animation:blink .8s step-end infinite;
@@ -562,7 +592,7 @@ select{cursor:pointer;appearance:auto}
 /* ==================== 消息提示 ==================== */
 .toast{
   position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
-  background:#333;color:#fff;padding:10px 24px;border-radius:8px;
+  background:var(--toast-bg);color:var(--toast-text);padding:10px 24px;border-radius:8px;
   font-size:.86rem;z-index:200;opacity:0;transition:opacity .3s;
   pointer-events:none;
 }
@@ -662,6 +692,7 @@ select{cursor:pointer;appearance:auto}
         <span class="dot no" id="apiDot"></span>
         <span id="apiStatusText">未配置</span>
       </span>
+      <button class="btn btn-sm" id="themeToggleBtn" onclick="toggleTheme()" title="切换明暗主题">🌙 暗色</button>
       <button class="btn btn-sm" onclick="openSettings()">⚙️ 设置</button>
       <button class="btn btn-sm" onclick="showAbout()">ℹ️</button>
     </div>
@@ -959,7 +990,7 @@ select{cursor:pointer;appearance:auto}
     </div>
   </div>
   <!-- ====== 一键生成进度面板 + 点击屏蔽层 ====== -->
-  <div id="autoGenOverlay" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;z-index:90;cursor:not-allowed;background:rgba(255,255,255,0.3);backdrop-filter:grayscale(30%) brightness(98%)"></div>
+  <div id="autoGenOverlay" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;z-index:90;cursor:not-allowed;background:var(--overlay-soft);backdrop-filter:grayscale(30%) brightness(98%)"></div>
   <div id="autoGenPanel" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:100;background:var(--surface);border-top:2px solid var(--accent2);box-shadow:0 -4px 20px rgba(0,0,0,.08);padding:10px 24px">
     <div style="display:flex;align-items:center;gap:16px;max-width:1100px;margin:0 auto">
       <span style="font-size:.85rem;font-weight:600;white-space:nowrap;color:var(--accent)" id="autoGenStatus">准备中…</span>
@@ -1018,7 +1049,7 @@ select{cursor:pointer;appearance:auto}
         <div style="flex:1;display:flex;gap:4px;min-width:0">
           <textarea id="chatInput" rows="1" style="flex:1;font-size:.82rem;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-family:var(--font);resize:none;background:var(--bg);min-height:34px;max-height:80px" placeholder="输入消息，Enter 发送，Shift+Enter 换行"></textarea>
           <button class="btn btn-primary" id="btnChatSend" onclick="sendChatMessage()" style="white-space:nowrap;align-self:flex-end">发送</button>
-          <button class="btn" id="btnChatStop" onclick="stopChat()" style="display:none;white-space:nowrap;align-self:flex-end;background:#c0392b;color:#fff;border:none">⏹ 停止</button>
+          <button class="btn" id="btnChatStop" onclick="stopChat()" style="display:none;white-space:nowrap;align-self:flex-end;background:var(--danger);color:#fff;border:none">⏹ 停止</button>
         </div>
       </div>
     </div>
@@ -1375,6 +1406,7 @@ let state = {
   activeChatId: 'chat0',
   chatIncludeOutline: false,
   chatIncludeChapters: false,
+  theme: 'light',
 };
 
 // ==================== 存储 ==================== 
@@ -1420,6 +1452,7 @@ function saveState(){
       chatWindows: state.chatWindows,
       chatIncludeOutline: state.chatIncludeOutline,
       chatIncludeChapters: state.chatIncludeChapters,
+      theme: state.theme,
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
   }catch(e){console.warn('Save state error:',e)}
@@ -1458,6 +1491,7 @@ function getDefaultState(){
     chatIncludeChapters: false,
     apiConfigs: [],
     activeConfigId: null,
+    theme: 'light',
   };
 }
 
@@ -1529,6 +1563,18 @@ function toast(msg){
   el.classList.add('show');
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+function applyTheme(theme){
+  state.theme = theme === 'dark' ? 'dark' : 'light';
+  document.documentElement.dataset.theme = state.theme;
+  const btn = document.getElementById('themeToggleBtn');
+  if(btn) btn.textContent = state.theme === 'dark' ? '☀️ 亮色' : '🌙 暗色';
+}
+
+function toggleTheme(){
+  applyTheme(state.theme === 'dark' ? 'light' : 'dark');
+  saveState();
 }
 
 // ==================== Tab 切换 ====================
@@ -4922,12 +4968,13 @@ function updateBadge(){
 }
 
 function showAbout(){
-  toast('📖 长篇小说写作助手 v3.99.8 — 配合自定义大模型 API，结构化写作，去 AI 味');
+  toast('📖 长篇小说写作助手 v3.99.9 — 配合自定义大模型 API，结构化写作，去 AI 味');
 }
 
 // ==================== 初始化 ====================
 function init(){
   loadState();
+  applyTheme(state.theme || 'light');
   // 确保至少有一个对话窗口，且 activeChatId 有效
   if(!state.chatWindows || state.chatWindows.length === 0){
     state.chatWindows = [{id:'chat0', name:'对话1', messages:[], systemPrompt:''}];
