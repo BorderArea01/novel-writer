@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>📖 长篇小说写作助手 v3.99.9</title>
+<title>📖 长篇小说写作助手 v3.99.10</title>
 <style>
 /* ==================== CSS 变量 & 重置 ==================== */
 :root {
@@ -774,6 +774,7 @@ select{cursor:pointer;appearance:auto}
         <h3 style="margin-bottom:0">📑 章节大纲</h3>
         <div class="flex">
           <button class="btn btn-primary" id="btnGenOutline" onclick="generateOutline()">✨ 生成大纲</button>
+          <button class="btn btn-sm" onclick="previewOutline()">👁 预览大纲</button>
           <button class="btn btn-sm" onclick="clearOutline()">🗑️ 清空</button>
         </div>
       </div>
@@ -2332,6 +2333,28 @@ function renderOutlinePreview(rawText, streaming){
   }).join('');
   if(outlineAutoScroll) scrollOutlineElementToBottom(panel);
   else panel.scrollTop = keepTop;
+}
+
+function previewOutline(){
+  if(!state.outline || state.outline.length === 0){
+    toast('请先生成大纲');
+    return;
+  }
+  const modal = document.getElementById('outlineStreamModal');
+  const pre = document.getElementById('outlineStreamContent');
+  const previewText = JSON.stringify(state.outline.map(ch => ({
+    chapter: ch.chapter,
+    title: ch.title,
+    summary: ch.summary,
+    plotPoints: (ch.plotPoints || []).map(p => p.desc || p),
+  })), null, 2);
+  window._lastOutlineRaw = previewText;
+  document.getElementById('outlineStreamTitle').textContent = '📑 大纲预览';
+  document.getElementById('outlineStreamStatus').textContent = `当前共有 ${state.outline.length} 章。可以切换原始输出或结构化预览。`;
+  pre.innerHTML = escapeHtml(previewText);
+  renderOutlinePreview(previewText, false);
+  setOutlineStreamView('preview');
+  modal.classList.add('show');
 }
 
 function fixOutlineJSON(){
@@ -4968,7 +4991,7 @@ function updateBadge(){
 }
 
 function showAbout(){
-  toast('📖 长篇小说写作助手 v3.99.9 — 配合自定义大模型 API，结构化写作，去 AI 味');
+  toast('📖 长篇小说写作助手 v3.99.10 — 配合自定义大模型 API，结构化写作，去 AI 味');
 }
 
 // ==================== 初始化 ====================
